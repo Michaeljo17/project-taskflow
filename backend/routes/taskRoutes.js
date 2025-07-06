@@ -1,25 +1,26 @@
 const express = require('express');
+const router = express.Router();
 const {
-  getAllTasks, 
-  getTask, 
-  createTask, 
-  updateTask, 
-  deleteTask, 
+  getAllTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
   getTaskStats
 } = require('../controllers/taskController');
+const { protect } = require('../middleware/authMiddleware'); // <-- 1. Impor 'protect'
 
-const router = express.Router();
+// 2. Tambahkan 'protect' sebagai middleware di setiap rute
+router.route('/')
+  .get(protect, getAllTasks)
+  .post(protect, createTask);
 
-router.route('/tasks')
-  .get(getAllTasks)
-  .post(createTask);
+router.route('/stats')
+  .get(protect, getTaskStats);
 
-router.route('/tasks/stats')
-  .get(getTaskStats);
-
-router.route('/tasks/:id')
-  .get(getTask)
-  .put(updateTask)
-  .delete(deleteTask);
+router.route('/:id')
+  .get(protect, getTask)
+  .put(protect, updateTask)
+  .delete(protect, deleteTask);
 
 module.exports = router;

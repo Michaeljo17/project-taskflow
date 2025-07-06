@@ -1,10 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // File ini seharusnya sudah ada dari tutorial
+import { BrowserRouter as Router } from 'react-router-dom';
+import App from './App';
+import { AuthProvider } from './context/AuthContext';
+import { ChakraProvider } from '@chakra-ui/react';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <ChakraProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ChakraProvider>
+    </Router>
   </React.StrictMode>
 );

@@ -1,45 +1,83 @@
 const Task = require('../models/Task');
 
-const handleRequest = (handler) => async (req, res) => {
+// Dapatkan semua tugas milik pengguna yang login
+exports.getAllTasks = async (req, res) => {
   try {
-    await handler(req, res);
+    const tasks = await Task.findAllByUser(req.user.id);
+    res.json({ success: true, count: tasks.length, data: tasks });
   } catch (error) {
-    console.error(`Error in ${req.path}:`, error);
-    res.status(500).json({ success: false, error: error.message || 'Server Error' });
+    res.status(500).json({ success: false, error: 'Failed to retrieve tasks' });
   }
 };
 
-exports.getAllTasks = handleRequest(async (req, res) => {
-  const tasks = await Task.findAll();
-  res.json({ success: true, count: tasks.length, data: tasks });
-});
+// Dapatkan satu tugas (dengan validasi pemilik)
+exports.getTask = async (req, res) => {
+    try {
+        const task = await Task.findByIdAndUser(req.params.id, req.user.id);
+        if (!task) {
+            return res.status(404).json({ success: false, error: 'Task not found or not authorized' });
+        }
+        res.json({ success: true, data: task });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to retrieve task' });
+    }
+};
 
-exports.getTask = handleRequest(async (req, res) => {
-  const task = await Task.findById(req.params.id);
-  if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
-  res.json({ success: true, data: task });
-});
+// Buat tugas baru
+exports.createTask = async (req, res) => {
+  try {
+    const { title, description, priority } = req.body;
+    if (!title) {
+      return res.status(400).json({ success: false, error: 'Title is required' });
+    }
 
-exports.createTask = handleRequest(async (req, res) => {
-  const { title } = req.body;
-  if (!title) return res.status(400).json({ success: false, error: 'Title is required' });
-  
-  const task = await Task.create(req.body);
-  res.status(201).json({ success: true, data: task });
-});
+    const taskData = { title, description, priority, user_id: req.user.id };
+    const task = await Task.create(taskData);
+    res.status(201).json({ success: true, data: task });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to create task' });
+  }
+};
 
-exports.updateTask = handleRequest(async (req, res) => {
-  const task = await Task.update(req.params.id, req.body);
-  if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
-  res.json({ success: true, data: task });
-});
+// Update tugas (dengan validasi pemilik)
+exports.updateTask = async (req, res) => {
+    try {
+        // Pertama, pastikan tugas itu ada dan milik user yang benar
+        let task = await Task.findByIdAndUser(req.params.id, req.user.id);
+        if (!task) {
+            return res.status(404).json({ success: false, error: 'Task not found or not authorized' });
+        }
 
-exports.deleteTask = handleRequest(async (req, res) => {
-  const result = await Task.delete(req.params.id);
-  res.json({ success: true, data: result });
-});
+        // Lakukan update
+        const updatedTask = await Task.update(req.params.id, req.body);
+        res.json({ success: true, data: updatedTask });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to update task' });
+    }
+};
 
-exports.getTaskStats = handleRequest(async (req, res) => {
-  const stats = await Task.getStats();
-  res.json({ success: true, data: stats });
-});
+// Hapus tugas (dengan validasi pemilik)
+exports.deleteTask = async (req, res) => {
+    try {
+        // Pertama, pastikan tugas itu ada dan milik user yang benar
+        let task = await Task.findByIdAndUser(req.params.id, req.user.id);
+        if (!task) {
+            return res.status(404).json({ success: false, error: 'Task not found or not authorized' });
+        }
+
+        await Task.delete(req.params.id);
+        res.json({ success: true, message: 'Task deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete task' });
+    }
+};
+
+// Dapatkan statistik tugas milik pengguna yang login
+exports.getTaskStats = async (req, res) => {
+    try {
+        const stats = await Task.getStatsByUser(req.user.id);
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to retrieve stats' });
+    }
+};

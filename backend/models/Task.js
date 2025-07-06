@@ -1,49 +1,51 @@
 const { pool } = require('../config/database');
 
 class Task {
-  static async findAll() {
-    const [rows] = await pool.execute('SELECT * FROM tasks ORDER BY created_at DESC');
+  static async findAllByUser(userId) {
+    const [rows] = await pool.execute(
+      'SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
     return rows;
   }
 
-  static async findById(id) {
-    const [rows] = await pool.execute('SELECT * FROM tasks WHERE id = ?', [id]);
+  static async findByIdAndUser(id, userId) {
+    const [rows] = await pool.execute(
+      'SELECT * FROM tasks WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
     return rows[0];
   }
 
   static async create(taskData) {
-    const { title, description, priority } = taskData;
+    const { title, description, priority, user_id } = taskData;
     const [result] = await pool.execute(
-      'INSERT INTO tasks (title, description, priority) VALUES (?, ?, ?)',
-      [title, description, priority || 'medium']
+      'INSERT INTO tasks (title, description, priority, user_id) VALUES (?, ?, ?, ?)',
+      [title, description || null, priority || 'medium', user_id]
     );
-    return this.findById(result.insertId);
+    return this.findByIdAndUser(result.insertId, user_id);
   }
 
   static async update(id, taskData) {
     const fields = Object.keys(taskData).map(key => `${key} = ?`);
     const values = [...Object.values(taskData), id];
-    
-    if (fields.length === 0) throw new Error('No fields to update');
-    
+
     await pool.execute(`UPDATE tasks SET ${fields.join(', ')} WHERE id = ?`, values);
-    return this.findById(id);
+    const [rows] = await pool.execute('SELECT * FROM tasks WHERE id = ?', [id]);
+    return rows[0];
   }
 
   static async delete(id) {
-    const task = await this.findById(id);
-    if (!task) throw new Error('Task not found');
-    
     await pool.execute('DELETE FROM tasks WHERE id = ?', [id]);
-    return { message: 'Task deleted successfully' };
+    return true;
   }
 
-  static async getStats() {
-    const [[{ total }]] = await pool.execute('SELECT COUNT(*) as total FROM tasks');
-    const [[{ completed }]] = await pool.execute('SELECT COUNT(*) as completed FROM tasks WHERE status = "completed"');
-    const [[{ pending }]] = await pool.execute('SELECT COUNT(*) as pending FROM tasks WHERE status = "pending"');
-    const [[{ highPriority }]] = await pool.execute('SELECT COUNT(*) as highPriority FROM tasks WHERE priority = "high"');
-    
+  static async getStatsByUser(userId) {
+    const [[{ total }]] = await pool.execute('SELECT COUNT(*) as total FROM tasks WHERE user_id = ?', [userId]);
+    const [[{ completed }]] = await pool.execute('SELECT COUNT(*) as completed FROM tasks WHERE status = "completed" AND user_id = ?', [userId]);
+    const [[{ pending }]] = await pool.execute('SELECT COUNT(*) as pending FROM tasks WHERE status = "pending" AND user_id = ?', [userId]);
+    const [[{ highPriority }]] = await pool.execute('SELECT COUNT(*) as highPriority FROM tasks WHERE priority = "high" AND user_id = ?', [userId]);
+
     return { total, completed, pending, highPriority };
   }
 }

@@ -62,3 +62,74 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 /* Responsive */
 @media (max-width: 992px) { .main-content { grid-template-columns: 1fr; } }
 @media (max-width: 576px) { .stats-container { grid-template-columns: 1fr 1fr; } .App { padding: 1rem; } }
+
+/* Form Styling */
+.form-container {
+  max-width: 450px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+}
+
+.form-container h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.btn-block {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.sub-text {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+/* ... (CSS yang sudah ada) ... */
+
+.user-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-logout {
+  background: var(--error-color);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Tambahkan di bagian bawah file App.css */
+
+.btn-settings {
+  background: #777;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+.btn-settings:hover {
+  background: #555;
+}
+.back-link {
+  display: block;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-light);
+}
+/* Tambahkan di bagian bawah file App.css */
+.divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 2rem 0;
+}

@@ -6,6 +6,20 @@ const api = axios.create({
   timeout: 10000
 });
 
+// Interceptor untuk menyisipkan token secara otomatis
+api.interceptors.request.use(
+  (config) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.token) {
+      config.headers['Authorization'] = `Bearer ${user.token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -15,11 +29,16 @@ api.interceptors.response.use(
 );
 
 export const taskAPI = {
-  healthCheck: () => api.get('/health'),
+  // Auth
+  register: (userData) => api.post('/auth/register', userData),
+  login: (userData) => api.post('/auth/login', userData),
+  updatePassword: (passwordData) => api.put('/auth/updatepassword', passwordData),
+  updateUsername: (usernameData) => api.put('/auth/updateusername', usernameData), // <-- BARIS INI KEMUNGKINAN HILANG
+
+  // Tasks
   getTasks: () => api.get('/tasks'),
-  getTask: (id) => api.get(`/tasks/${id}`),
+  getStats: () => api.get('/tasks/stats'),
   createTask: (data) => api.post('/tasks', data),
   updateTask: (id, data) => api.put(`/tasks/${id}`, data),
   deleteTask: (id) => api.delete(`/tasks/${id}`),
-  getStats: () => api.get('/tasks/stats')
 };
